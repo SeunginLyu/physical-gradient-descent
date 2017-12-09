@@ -1,7 +1,7 @@
 Physical Gradient Descent
 =========================
 
-This is code for adapting the gradient descent algorithm to run on earth's 
+This is code for adapting the gradient descent algorithm to run on earth's
 actual geometry. You can read more about this in the attached [blog post].
 
 ## Running gradient descent
@@ -19,6 +19,10 @@ And run gradient descent like so:
 ```bash
 (env)> python gradientdescent.py 47.801686 -123.709083 ~/Downloads/srtm_12_03/srtm_12_03.tif
 ```
+
+Mount olympus : python gradientdescent.py 47.801686 -123.709083 ~/Documents/physical-gradient-descent/srtm_12_03.tif
+Olin College : python gradientdescent.py 42.2934 -71.2639 ~/Documents/physical-gradient-descent/srtm_22_04.tif
+Mount Everest : python gradientdescent.py 27.9880 86.9252  ~/Documents/physical-gradient-descent/srtm_54_07.tif
 
 A number of parameter tweaking options are supported:
 
