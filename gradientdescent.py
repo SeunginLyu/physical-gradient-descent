@@ -30,7 +30,34 @@ def compute_cost(theta):
     J = get_elevation(lat, lon)
     return J
 
-def gradient_descent(theta, alpha, gamma, num_iters):
+def gradient_descent_vanilla(theta, alpha, gamma, num_iters):
+    J_history = np.zeros(shape=(num_iters, 3))
+    velocity = [ 0, 0 ]
+
+    for i in range(num_iters):
+
+        cost = compute_cost(theta)
+
+        # Fetch elevations at offsets in each dimension
+        elev1 = get_elevation(theta[0] + 0.001, theta[1])
+        elev2 = get_elevation(theta[0] - 0.001, theta[1])
+        elev3 = get_elevation(theta[0], theta[1] + 0.001)
+        elev4 = get_elevation(theta[0], theta[1] - 0.001)
+
+        J_history[i] = [ cost, theta[0], theta[1] ]
+        if cost <= 0: return theta, J_history
+
+        # Calculate slope
+        lat_slope = elev1 / elev2 - 1
+        lon_slope = elev3 / elev4 - 1
+
+        # Update variables
+        theta[0][0] = theta[0][0] - lat_slope
+        theta[1][0] = theta[1][0] - lon_slope
+
+    return theta, J_history
+
+def gradient_descent_momentum(theta, alpha, gamma, num_iters):
     J_history = np.zeros(shape=(num_iters, 3))
     velocity = [ 0, 0 ]
 
@@ -47,11 +74,11 @@ def gradient_descent(theta, alpha, gamma, num_iters):
         if cost <= 0: return theta, J_history
 
         lat_slope = elev1 / elev2 - 1
-        lon_slope = elev3 / elev4 - 1 
+        lon_slope = elev3 / elev4 - 1
 
         velocity[0] = gamma * velocity[0] + alpha * lat_slope
         velocity[1] = gamma * velocity[1] + alpha * lon_slope
-        
+
         print('Update is', velocity[0])
         print('Update is', velocity[1])
         print('Elevation at', theta[0], theta[1], 'is', cost)
@@ -60,6 +87,8 @@ def gradient_descent(theta, alpha, gamma, num_iters):
         theta[1][0] = theta[1][0] - velocity[1]
 
     return theta, J_history
+
+
 
 theta = np.array([ [args.lat], [args.lon] ])
 theta, J_history = gradient_descent(theta, args.alpha, args.gamma, args.iters)
