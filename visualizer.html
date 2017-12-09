@@ -24,11 +24,13 @@
       var csv1 // global variable that contains vanilla
       var csv2 // global variable that contains momentum
       var csv3 // global variable that contains adagrad
+      var csv4 // global variable that contains adadelta
       function initMap() {
 
         const file1 = 'output.csvvanilla'
         const file2 = 'output.csvmomentum'
         const file3 = 'output.csvadagrad'
+        const file4 = 'output.csvadadelta'
         axios
         .get(file1)
         .then(resp => {
@@ -43,6 +45,11 @@
         .get(file3)
         .then(resp => {
           csv3 = resp.data
+        })
+        axios
+        .get(file4)
+        .then(resp => {
+          csv4 = resp.data
         })
 
         axios
@@ -64,6 +71,13 @@
             lng : parseFloat(coord.split(',')[1])
           }))
           const coordinates3 = csv3
+          .split('\n')
+          .slice(0, -1)
+          .map(coord => ({
+            lat : parseFloat(coord.split(',')[0]),
+            lng : parseFloat(coord.split(',')[1])
+          }))
+          const coordinates4 = csv4
           .split('\n')
           .slice(0, -1)
           .map(coord => ({
@@ -99,10 +113,18 @@
             strokeOpacity : 1.0,
             strokeWeight  : 2
           })
+          const path4 = new google.maps.Polyline({
+            path          : coordinates4,
+            geodesic      : true,
+            strokeColor   : 'green',
+            strokeOpacity : 1.0,
+            strokeWeight  : 2
+          })
 
           path1.setMap(map)
           path2.setMap(map)
           path3.setMap(map)
+          path4.setMap(map)
 
           const icon1 = {
             path         : google.maps.SymbolPath.CIRCLE,
@@ -128,14 +150,24 @@
             scale        : 4.5,
             strokeWeight : 1
           }
+          const icon4 = {
+            path         : google.maps.SymbolPath.CIRCLE,
+            strokeColor  : 'white',
+            fillColor    : 'red',
+            fillOpacity  : 0.4,
+            scale        : 4.5,
+            strokeWeight : 1
+          }
 
           let time1 = 0
           let time2 = 0
           let time3 = 0
+          let time4 = 0
           const step = 100
           const marker1 = new google.maps.Marker({ map, icon1 })
           const marker2 = new google.maps.Marker({ map, icon2 })
           const marker3 = new google.maps.Marker({ map, icon3 })
+          const marker4 = new google.maps.Marker({ map, icon4 })
           setInterval(() => {
             if (time1 > step * coordinates1.length) time1 = 0
             else marker1.setPosition(coordinates1[time1 / 100])
@@ -143,9 +175,12 @@
             else marker2.setPosition(coordinates2[time2 / 100])
             if (time3 > step * coordinates3.length) time3 = 0
             else marker3.setPosition(coordinates3[time3 / 100])
+            if (time4 > step * coordinates4.length) time4 = 0
+            else marker4.setPosition(coordinates4[time4 / 100])
             time1 += step
             time2 += step
             time3 += step
+            time4 += step
           }, step)
         })
 
