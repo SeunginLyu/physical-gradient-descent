@@ -21,6 +21,10 @@ args = parser.parse_args()
 src = rasterio.open(args.tif)
 band = src.read(1)
 
+delta = 0.001
+
+
+
 def get_elevation(lat, lon):
     vals = src.index(lon, lat)
     return band[vals]
@@ -35,14 +39,13 @@ def gradient_descent_vanilla(theta, alpha, gamma, num_iters):
     velocity = [ 0, 0 ]
 
     for i in range(num_iters):
-
         cost = compute_cost(theta)
 
         # Fetch elevations at offsets in each dimension
-        elev1 = get_elevation(theta[0] + 0.001, theta[1])
-        elev2 = get_elevation(theta[0] - 0.001, theta[1])
-        elev3 = get_elevation(theta[0], theta[1] + 0.001)
-        elev4 = get_elevation(theta[0], theta[1] - 0.001)
+        elev1 = get_elevation(theta[0] + delta, theta[1])
+        elev2 = get_elevation(theta[0] - delta, theta[1])
+        elev3 = get_elevation(theta[0], theta[1] + delta)
+        elev4 = get_elevation(theta[0], theta[1] - delta)
 
         J_history[i] = [ cost, theta[0], theta[1] ]
         if cost <= 0: return theta, J_history
@@ -52,23 +55,22 @@ def gradient_descent_vanilla(theta, alpha, gamma, num_iters):
         lon_slope = elev3 / elev4 - 1
 
         # Update variables
-        theta[0][0] = theta[0][0] - lat_slope
-        theta[1][0] = theta[1][0] - lon_slope
+        theta[0][0] = theta[0][0] - alpha * lat_slope
+        theta[1][0] = theta[1][0] - alpha * lon_slope
 
     return theta, J_history
 
 def gradient_descent_momentum(theta, alpha, gamma, num_iters):
     J_history = np.zeros(shape=(num_iters, 3))
     velocity = [ 0, 0 ]
-
     for i in range(num_iters):
 
         cost = compute_cost(theta)
 
-        elev1 = get_elevation(theta[0] + 0.001, theta[1])
-        elev2 = get_elevation(theta[0] - 0.001, theta[1])
-        elev3 = get_elevation(theta[0], theta[1] + 0.001)
-        elev4 = get_elevation(theta[0], theta[1] - 0.001)
+        elev1 = get_elevation(theta[0] + delta, theta[1])
+        elev2 = get_elevation(theta[0] - delta, theta[1])
+        elev3 = get_elevation(theta[0], theta[1] + delta)
+        elev4 = get_elevation(theta[0], theta[1] - delta)
 
         J_history[i] = [ cost, theta[0], theta[1] ]
         if cost <= 0: return theta, J_history
@@ -88,18 +90,31 @@ def gradient_descent_momentum(theta, alpha, gamma, num_iters):
 
     return theta, J_history
 
-
-
 theta = np.array([ [args.lat], [args.lon] ])
-theta, J_history = gradient_descent(theta, args.alpha, args.gamma, args.iters)
+theta, J_history = gradient_descent_vanilla(theta, args.alpha, args.gamma, args.iters)
 
-with open(args.output, 'w', newline='') as csvfile:
+theta2 = np.array([ [args.lat], [args.lon] ])
+theta2, J_history2 = gradient_descent_momentum(theta2, args.alpha, args.gamma, args.iters)
+
+
+with open(args.output+"vanilla", 'w', newline='') as csvfile:
     writer = csv.writer(csvfile)
     for weight in J_history:
         if weight[1] != 0 and weight[2] != 0:
             writer.writerow([ weight[1], weight[2] ])
 
 plot(np.arange(args.iters), J_history[:, 0])
+xlabel('Iterations')
+ylabel('Elevation')
+show()
+
+with open(args.output+"momentum", 'w', newline='') as csvfile:
+    writer = csv.writer(csvfile)
+    for weight in J_history2:
+        if weight[1] != 0 and weight[2] != 0:
+            writer.writerow([ weight[1], weight[2] ])
+
+plot(np.arange(args.iters), J_history2[:, 0])
 xlabel('Iterations')
 ylabel('Elevation')
 show()

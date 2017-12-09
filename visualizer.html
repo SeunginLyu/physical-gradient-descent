@@ -21,16 +21,36 @@
     <div id="map">
     </div>
     <script>
+      var csv1
+      var csv2
       function initMap() {
 
-        const file = 'output.csv'
+        const file1 = 'output.csvvanilla'
+        const file2 = 'output.csvmomentum'
+        axios
+        .get(file1)
+        .then(resp => {
+          csv1 = resp.data
+        })
+        axios
+        .get(file2)
+        .then(resp => {
+          csv2 = resp.data
+        })
+
 
         axios
-        .get(file)
+        .get(file1)
         .then(resp => {
-          const csv = resp.data
+          const coordinates1 = csv1
+          .split('\n')
+          .slice(0, -1)
+          .map(coord => ({
+            lat : parseFloat(coord.split(',')[0]),
+            lng : parseFloat(coord.split(',')[1])
+          }))
 
-          const coordinates = csv
+          const coordinates2 = csv2
           .split('\n')
           .slice(0, -1)
           .map(coord => ({
@@ -41,21 +61,37 @@
           const mapEl = document.getElementById('map')
           const map = new google.maps.Map(mapEl, {
             zoom      : 10,
-            center    : coordinates[0],
+            center    : coordinates1[0],
             mapTypeId : 'terrain'
           })
 
-          const path = new google.maps.Polyline({
-            path          : coordinates,
+          const path1 = new google.maps.Polyline({
+            path          : coordinates1,
             geodesic      : true,
-            strokeColor   : '#FF0000',
+            strokeColor   : 'blue',
+            strokeOpacity : 1.0,
+            strokeWeight  : 2
+          })
+          const path2 = new google.maps.Polyline({
+            path          : coordinates2,
+            geodesic      : true,
+            strokeColor   : 'red',
             strokeOpacity : 1.0,
             strokeWeight  : 2
           })
 
-          path.setMap(map)
+          path1.setMap(map)
+          path2.setMap(map)
 
-          const icon = {
+          const icon1 = {
+            path         : google.maps.SymbolPath.CIRCLE,
+            strokeColor  : 'white',
+            fillColor    : 'black',
+            fillOpacity  : 0.4,
+            scale        : 4.5,
+            strokeWeight : 1
+          }
+          const icon2 = {
             path         : google.maps.SymbolPath.CIRCLE,
             strokeColor  : 'white',
             fillColor    : 'red',
@@ -64,17 +100,22 @@
             strokeWeight : 1
           }
 
-          let time = 0
+          let time1 = 0
+          let time2 = 0
           const step = 100
-          const marker = new google.maps.Marker({ map, icon })
-
+          const marker1 = new google.maps.Marker({ map, icon1 })
+          const marker2 = new google.maps.Marker({ map, icon2 })
           setInterval(() => {
-            if (time > step * coordinates.length) time = 0
-            else marker.setPosition(coordinates[time / 100])
-            time += step
+            if (time1 > step * coordinates1.length) time1 = 0
+            else marker1.setPosition(coordinates1[time1 / 100])
+            if (time2 > step * coordinates2.length) time2 = 0
+            else marker2.setPosition(coordinates2[time2 / 100])
+            time1 += step
+            time2 += step
           }, step)
-
         })
+
+
       }
     </script>
     <script async defer
